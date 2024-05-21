@@ -1,17 +1,20 @@
 package Interfaz;
 
-
+import java.util.List;
 import java.io.*;
 import javax.swing.JOptionPane;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 import server.Flujocliente;
 
 public class Logiin extends javax.swing.JFrame {
 
     public static Socket sharedSocket;
     public static boolean sharedAuth;
-    private static final String SERVER_ADDRESS = "192.168.100.4"; // Cambia esto con la dirección IP de tu servidor
+    private static final String SERVER_ADDRESS = "192.168.1.35"; // Cambia esto con la dirección IP de tu servidor
     private static final int SERVER_PORT = 8080; // Cambia esto con el puerto en el que tu servidor está escuchando
 
     public Logiin() {
@@ -31,7 +34,7 @@ public class Logiin extends javax.swing.JFrame {
         jLabel8 = new javax.swing.JLabel();
         LoginButton = new javax.swing.JButton();
         jLabel10 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        btnRegistrarse = new javax.swing.JButton();
         Password = new javax.swing.JPasswordField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -73,10 +76,10 @@ public class Logiin extends javax.swing.JFrame {
         jLabel10.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel10.setText("Inicio de sesión");
 
-        jButton1.setText("Registro");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        btnRegistrarse.setText("Registro");
+        btnRegistrarse.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                btnRegistrarseActionPerformed(evt);
             }
         });
 
@@ -94,7 +97,7 @@ public class Logiin extends javax.swing.JFrame {
                 .addGap(39, 39, 39)
                 .addComponent(LoginButton)
                 .addGap(53, 53, 53)
-                .addComponent(jButton1)
+                .addComponent(btnRegistrarse)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
@@ -114,7 +117,7 @@ public class Logiin extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel10)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 49, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 38, Short.MAX_VALUE)
                 .addComponent(jLabel8)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(UserName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -125,7 +128,7 @@ public class Logiin extends javax.swing.JFrame {
                 .addGap(22, 22, 22)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(LoginButton)
-                    .addComponent(jButton1))
+                    .addComponent(btnRegistrarse))
                 .addGap(43, 43, 43))
         );
 
@@ -155,62 +158,97 @@ public class Logiin extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void btnRegistrarseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegistrarseActionPerformed
         this.dispose();
         JFrame frame = new JFrame("Registro");
         Register registerPanel = new Register();
         frame.add(registerPanel);
         frame.pack();
         frame.setVisible(true);
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_btnRegistrarseActionPerformed
 
     private void UserNameActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_UserNameActionPerformed
     }// GEN-LAST:event_UserNameActionPerformed
 
     private void PasswordActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_PasswordActionPerformed
     }// GEN-LAST:event_PasswordActionPerformed
+    
+    private List<String> traerRoles(String username) {
+    // Ruta del archivo donde se almacenan los usuarios y contraseñas
+    String rutaArchivo = "Roles.txt";
 
+    // Lista para almacenar los roles del usuario
+    List<String> role = new ArrayList<>();
+
+    // Lee el archivo línea por línea para buscar el nombre de usuario
+    try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
+        String linea;
+        while ((linea = br.readLine()) != null) {
+            // Divide la línea en nombre de usuario y roles usando una coma como delimitador
+            String[] partes = linea.split(",");
+            // Compara el nombre de usuario con el proporcionado
+            if (partes.length > 0 && partes[0].equals(username)) {
+                // Agrega los roles del usuario a la lista
+                for (int i = 1; i < partes.length; i++) {
+                    role.add(partes[i].trim()); // Utiliza trim() para eliminar espacios en blanco
+                }
+                // Devuelve la lista de roles
+                return role;
+            }
+        }
+    } catch (IOException e) {
+        System.err.println("Error al leer el archivo: " + e.getMessage());
+    }
+
+    // Si el usuario no se encuentra, devuelve una lista vacía
+    return role;
+}
+    
     private void LoginButtonActionPerformed(java.awt.event.ActionEvent evt) {
-       String username = UserName.getText();
-       char[] passChars = Password.getPassword();
-
- 
-      String password = new String(passChars);
+    String username = UserName.getText();
+    char[] passChars = Password.getPassword();
+    String password = new String(passChars);
+    
+    traerRoles(username);
 
     try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
          PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
          BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-        // Crear instancia de ClientCommunication para manejar la comunicación con el servidor
         Flujocliente clientCommunication = new Flujocliente(socket, in, out);
+        // envia mensajes al servidor para autenticacion
+        clientCommunication.sendMessage("0," + username + "," + password + "-" + Logiin.sharedAuth + "," + traerRoles(username));
 
-        // Enviar mensaje al servidor para autenticación
-        clientCommunication.sendMessage("0," + username + "," + password + "-" + Logiin.sharedAuth);
-
-        // Recibir respuesta del servidor
         String response = clientCommunication.receiveMessage();
 
-        if (response != null && response.startsWith("auth exitoso")) {
-            boolean isAuthenticated = Boolean.parseBoolean(response.substring(13));
-            if (isAuthenticated) {
-                Logiin.sharedSocket = socket;
-                Logiin.sharedAuth = true;
-                Client client = new Client(username, clientCommunication);
-                client.setVisible(true);
-                this.dispose();
-            } else {
-                JOptionPane.showMessageDialog(this, "Error: Usuario o contraseña incorrectos");
-            }
+        if (response != null && response.startsWith("auth exitoso true")) {
+            // Solicitar roles al servidor
+            clientCommunication.sendMessage("getRoles," + username);
+            String rolesResponse = clientCommunication.receiveMessage();
+            System.out.println("Roles Response: " + rolesResponse); // Depuración
+            
+            Logiin.sharedSocket = socket;
+            Logiin.sharedAuth = true;
+            Client client = new Client(username, clientCommunication, traerRoles(username));
+            client.setVisible(true);
+            this.dispose();
         } else {
-            JOptionPane.showMessageDialog(this, "Error: Fallo al autenticar con el servidor");
+            JOptionPane.showMessageDialog(this, "Error: Usuario o contraseña incorrectos");
         }
 
     } catch (IOException e) {
         System.err.println("Error al conectar con el servidor: " + e.getMessage());
         JOptionPane.showMessageDialog(this, "Error al conectar con el servidor");
     }
-    }
+}
 
+    private void abrirVentanaCliente(String username, List<String> roles, Flujocliente clientCommunication) {
+        Client client = new Client(username, clientCommunication, roles);
+        client.setVisible(true);
+
+        JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
+        frame.dispose();
+    }
     public static void main(String args[]) {
         try {
             InetAddress inetAddress = InetAddress.getLocalHost();
@@ -231,7 +269,7 @@ public class Logiin extends javax.swing.JFrame {
     private javax.swing.JButton LoginButton;
     private javax.swing.JPasswordField Password;
     private javax.swing.JTextField UserName;
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton btnRegistrarse;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;

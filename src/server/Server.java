@@ -1,6 +1,4 @@
-
 package server;
-
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -9,17 +7,18 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
 public class Server {
 
-    private static final int PORT = 8080; 
-    private static final int MAX_THREADS = 8; 
-    private static final ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS); 
+    private static final int PORT = 8080;
+    private static final int MAX_THREADS = 8;
+    private static final ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
     private static final Verfication fileUserAuthentication = new Verfication(); // Objeto para
-  
 
     public static void main(String[] args) {
 
@@ -70,7 +69,7 @@ public class Server {
 
                     } // Manejar solicitudes de autenticación
                     else {
-                        
+
                         // Saltar al siguiente ciclo de bucle después de manejar la autenticación
                     }
 
@@ -113,8 +112,17 @@ public class Server {
                     break;
                 case 1:
                     // Registro de nuevo usuario
-                    fileUserAuthentication.registerUser(username, password);
+                    List<String> roles = new ArrayList<>();
+                    if (parts.length > 3) {
+                        roles = Arrays.asList(parts).subList(3, parts.length);
+                    }
+                    fileUserAuthentication.registerUser(username, password, roles);
                     out.println("auth exitoso true"); // Enviar un mensaje al cliente indicando que el registro fue exitoso
+                    break;
+                case 2:
+                    // Obtener roles del usuario
+                    List<String> userRoles = fileUserAuthentication.getUserRoles(username);
+                    out.println(String.join(",", userRoles));
                     break;
                 default:
                     System.err.println("Código de operación no válido");
@@ -123,6 +131,5 @@ public class Server {
 
         }
 
-     
     }
 }
