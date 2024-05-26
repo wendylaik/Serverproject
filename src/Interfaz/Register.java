@@ -22,7 +22,7 @@ public class Register extends javax.swing.JPanel {
 
     public static Socket sharedSocket;
     public static boolean sharedAuth;
-    private static final String SERVER_ADDRESS = "192.168.1.35"; // Cambia esto con la dirección IP de tu servidor
+    private static final String SERVER_ADDRESS = "192.168.100.7"; // Cambia esto con la dirección IP de tu servidor
     private static final int SERVER_PORT = 8080;
 
     public Register() {
@@ -49,6 +49,7 @@ public class Register extends javax.swing.JPanel {
         documentRole = new javax.swing.JCheckBox();
         videoRole = new javax.swing.JCheckBox();
         musicRole = new javax.swing.JCheckBox();
+        back = new javax.swing.JButton();
 
         jPanel1.setBackground(new java.awt.Color(46, 87, 112));
 
@@ -156,6 +157,15 @@ public class Register extends javax.swing.JPanel {
                 .addContainerGap(26, Short.MAX_VALUE))
         );
 
+        back.setBackground(new java.awt.Color(23, 50, 78));
+        back.setForeground(new java.awt.Color(255, 255, 255));
+        back.setText("Volver ");
+        back.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                backActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -174,8 +184,10 @@ public class Register extends javax.swing.JPanel {
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(33, 33, 33))
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(248, 248, 248)
-                .addComponent(btnRegistro, javax.swing.GroupLayout.PREFERRED_SIZE, 219, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(230, 230, 230)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(btnRegistro, javax.swing.GroupLayout.DEFAULT_SIZE, 219, Short.MAX_VALUE)
+                    .addComponent(back, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -199,9 +211,11 @@ public class Register extends javax.swing.JPanel {
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addGap(21, 21, 21)
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 141, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 65, Short.MAX_VALUE)
                 .addComponent(btnRegistro)
-                .addGap(28, 28, 28))
+                .addGap(18, 18, 18)
+                .addComponent(back)
+                .addGap(42, 42, 42))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -307,6 +321,16 @@ public class Register extends javax.swing.JPanel {
     private void confirmPassActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_confirmPassActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_confirmPassActionPerformed
+
+    private void backActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backActionPerformed
+         JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
+        if (frame != null) {
+            frame.dispose();
+        }
+        Logiin log = new Logiin();
+        log.setVisible(true);
+        
+    }//GEN-LAST:event_backActionPerformed
     private void abrirVentanaCliente(String username, String roles, Flujocliente clientCommunication) {
         List<String> rolesList = Arrays.asList(roles.split(","));
         Client client = new Client(username, clientCommunication, rolesList);
@@ -351,6 +375,7 @@ public class Register extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPasswordField Password;
     private javax.swing.JTextField Username;
+    private javax.swing.JButton back;
     private javax.swing.JButton btnRegistro;
     private javax.swing.JPasswordField confirmPass;
     private javax.swing.JCheckBox documentRole;
