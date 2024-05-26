@@ -23,6 +23,7 @@ public final class Client extends javax.swing.JFrame {
             return;
         }
         initComponents();
+        
         //configurarAccesoSegunRoles();
         roleAccess(roles);
     }
