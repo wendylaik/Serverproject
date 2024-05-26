@@ -1,5 +1,6 @@
 package Interfaz;
 
+import java.awt.Color;
 import java.util.List;
 import java.io.*;
 import javax.swing.JOptionPane;
@@ -36,7 +37,7 @@ public class Logiin extends javax.swing.JFrame {
         LoginButton = new javax.swing.JButton();
         jLabel10 = new javax.swing.JLabel();
         btnRegistrarse = new javax.swing.JButton();
-        Password = new javax.swing.JPasswordField();
+        txtPassword = new javax.swing.JPasswordField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBackground(new java.awt.Color(153, 255, 255));
@@ -57,9 +58,17 @@ public class Logiin extends javax.swing.JFrame {
         jPanel3.setBackground(new java.awt.Color(46, 87, 112));
         jPanel3.setPreferredSize(new java.awt.Dimension(350, 244));
 
-        UserName.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        UserName.setHorizontalAlignment(javax.swing.JTextField.LEFT);
         UserName.setToolTipText("User");
         UserName.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        UserName.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                UserNameFocusGained(evt);
+            }
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                UserNameFocusLost(evt);
+            }
+        });
         UserName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 UserNameActionPerformed(evt);
@@ -97,8 +106,21 @@ public class Logiin extends javax.swing.JFrame {
             }
         });
 
-        Password.setText("jPasswordField1");
-        Password.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        txtPassword.setToolTipText("");
+        txtPassword.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        txtPassword.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                txtPasswordFocusGained(evt);
+            }
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                txtPasswordFocusLost(evt);
+            }
+        });
+        txtPassword.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtPasswordActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -118,7 +140,7 @@ public class Logiin extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(btnRegistrarse, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE))
                     .addComponent(UserName)
-                    .addComponent(Password))
+                    .addComponent(txtPassword))
                 .addContainerGap(65, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
@@ -133,7 +155,7 @@ public class Logiin extends javax.swing.JFrame {
                 .addGap(27, 27, 27)
                 .addComponent(jLabel7)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(Password, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(40, 40, 40)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(LoginButton)
@@ -165,18 +187,24 @@ public class Logiin extends javax.swing.JFrame {
                 .addComponent(jLabel2)
                 .addGap(45, 45, 45)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, 275, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(64, Short.MAX_VALUE))
+                .addContainerGap(52, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
@@ -190,6 +218,37 @@ public class Logiin extends javax.swing.JFrame {
         frame.pack();
         frame.setVisible(true);
     }//GEN-LAST:event_btnRegistrarseActionPerformed
+
+    private void txtPasswordFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtPasswordFocusGained
+       if(txtPassword.getText().equals("Ingrese su contraseña")){
+           txtPassword.setText("");
+           txtPassword.setForeground(new Color(0,0,0));
+       }
+    }//GEN-LAST:event_txtPasswordFocusGained
+
+    private void txtPasswordFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtPasswordFocusLost
+       if(txtPassword.getText().equals("")){
+           txtPassword.setText("Ingrese su contraseña");
+           txtPassword.setForeground(new Color(204,204,204));}
+    }//GEN-LAST:event_txtPasswordFocusLost
+
+    private void txtPasswordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPasswordActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtPasswordActionPerformed
+
+    private void UserNameFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_UserNameFocusGained
+        if(UserName.getText().equals("Ingrese su usuario")){
+           UserName.setText("");
+           UserName.setForeground(new Color(0,0,0));
+       }
+    }//GEN-LAST:event_UserNameFocusGained
+
+    private void UserNameFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_UserNameFocusLost
+       if(UserName.getText().equals("")){
+           UserName.setText("Ingrese su usuario");
+           UserName.setForeground(new Color(204,204,204));
+       }
+    }//GEN-LAST:event_UserNameFocusLost
 
     private void UserNameActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_UserNameActionPerformed
     }// GEN-LAST:event_UserNameActionPerformed
@@ -230,7 +289,7 @@ public class Logiin extends javax.swing.JFrame {
     
     private void LoginButtonActionPerformed(java.awt.event.ActionEvent evt) {
     String username = UserName.getText();
-    char[] passChars = Password.getPassword();
+    char[] passChars = txtPassword.getPassword();
     String password = new String(passChars);
     
     traerRoles(username);
@@ -291,7 +350,6 @@ public class Logiin extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton LoginButton;
-    private javax.swing.JPasswordField Password;
     private javax.swing.JTextField UserName;
     private javax.swing.JButton btnRegistrarse;
     private javax.swing.JLabel jLabel1;
@@ -301,5 +359,6 @@ public class Logiin extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPasswordField txtPassword;
     // End of variables declaration//GEN-END:variables
 }
