@@ -23,7 +23,7 @@ public class Register extends javax.swing.JPanel {
 
     public static Socket sharedSocket;
     public static boolean sharedAuth;
-    private static final String SERVER_ADDRESS = "25.65.94.55"; // Cambia esto con la dirección IP de tu servidor
+    private static final String SERVER_ADDRESS = "192.168.100.7"; // Cambia esto con la dirección IP de tu servidor
     private static final int SERVER_PORT = 12345;
 
     public Register() {

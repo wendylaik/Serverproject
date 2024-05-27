@@ -14,7 +14,7 @@ public class Logiin extends javax.swing.JFrame {
 
     public static Socket sharedSocket;
     public static boolean sharedAuth;
-    static final String SERVER_ADDRESS = "25.65.94.55"; // Cambia esto con la dirección IP de tu servidor
+    static final String SERVER_ADDRESS = "192.168.100.7"; // Cambia esto con la dirección IP de tu servidor
     static final int SERVER_PORT = 12345; // Cambia esto con el puerto en el que tu servidor está escuchando
 
     public Logiin() {

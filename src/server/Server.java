@@ -15,7 +15,7 @@ public class Server {
     public static void main(String[] args) {
     try {
         // Cambiar la dirección IP del servidor para la dirección IP de Hamachi
-        InetAddress inetAddress = InetAddress.getByName("25.65.94.55"); // Reemplaza "tu_direccion_hamachi" con tu dirección IP de Hamachi
+        InetAddress inetAddress = InetAddress.getByName("192.168.100.7"); // Reemplaza "tu_direccion_hamachi" con tu dirección IP de Hamachi
         try (ServerSocket serverSocket = new ServerSocket(PORT, 50, inetAddress)) {
             System.out.println("Servidor iniciado en el puerto " + PORT);
             System.out.println("Dirección IP del servidor: " + inetAddress.getHostAddress());
