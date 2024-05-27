@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- *
  * @author Jordy vindas
  */
+
 public class Verfication {
 
     private static final String FILE_PATH = "Users.txt";
@@ -83,9 +83,4 @@ public class Verfication {
         }
         return roles;
     }
-    
-    
- 
-    
-    
 }

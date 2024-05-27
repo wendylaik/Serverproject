@@ -1,154 +1,180 @@
 package server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.InetAddress;
+import java.io.*;
 import java.net.ServerSocket;
+import java.net.InetAddress;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Base64;
 
 public class Server {
 
-    private static final int PORT = 8080;
-    private static final int MAX_THREADS = 8;
-    private static final ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
-    private static final Verfication fileUserAuthentication = new Verfication(); // Objeto para la autenticación
+    private static final int PORT = 12345;
+    private static final String CONTENT_DIR = "server_content";
 
     public static void main(String[] args) {
-        try {
-            String IP = "25.65.94.55"; // Asegúrate de usar tu IP de Hamachi
-            InetAddress hamachiAddress = InetAddress.getByName(IP);
+    try {
+        // Cambiar la dirección IP del servidor para la dirección IP de Hamachi
+        InetAddress inetAddress = InetAddress.getByName("25.65.94.55"); // Reemplaza "tu_direccion_hamachi" con tu dirección IP de Hamachi
+        try (ServerSocket serverSocket = new ServerSocket(PORT, 50, inetAddress)) {
+            System.out.println("Servidor iniciado en el puerto " + PORT);
+            System.out.println("Dirección IP del servidor: " + inetAddress.getHostAddress());
 
-            try (ServerSocket serverSocket = new ServerSocket(PORT, 0, hamachiAddress)) {
-                // Mostrar mensajes informativos
-                System.out.println("Servidor escuchando en " + IP + " en el puerto " + PORT);
-
-                while (true) {
-                    // Esperar y aceptar conexiones entrantes de clientes
-                    Socket clientSocket = serverSocket.accept();
-                    System.out.println("Cliente conectado desde " + clientSocket.getInetAddress());
-
-                    // Crear un nuevo hilo (ClientHandler) para manejar las solicitudes del cliente
-                    Runnable clientHandler = new ClientHandler(clientSocket, fileUserAuthentication);
-                    executor.execute(clientHandler); // Ejecutar el hilo en el ExecutorService
-                }
-            } catch (IOException e) {
-                System.err.println("Error en el servidor: " + e.getMessage());
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Nuevo cliente conectado: " + clientSocket.getInetAddress().getHostAddress());
+                new Thread(new ClientHandler(clientSocket)).start();
             }
-        } catch (IOException e) {
-            System.err.println("Error al obtener la dirección de Hamachi: " + e.getMessage());
         }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+}
 
-    // Clase interna para manejar las solicitudes de un cliente específico
     static class ClientHandler implements Runnable {
 
-        private final Socket clientSocket;
-        private final Verfication fileUserAuthentication;
+        private Socket clientSocket;
 
-        public ClientHandler(Socket clientSocket, Verfication fileUserAuthentication) {
-            this.clientSocket = clientSocket;
-            this.fileUserAuthentication = fileUserAuthentication;
+        public ClientHandler(Socket socket) {
+            this.clientSocket = socket;
         }
 
         @Override
         public void run() {
-            try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+            try (InputStream input = clientSocket.getInputStream(); OutputStream output = clientSocket.getOutputStream(); BufferedReader reader = new BufferedReader(new InputStreamReader(input)); PrintWriter writer = new PrintWriter(output, true)) {
 
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    System.out.println("Mensaje del cliente: " + inputLine);
+                String request;
+                while ((request = reader.readLine()) != null) {
+                    handleRequest(request, writer, output);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    clientSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
-                    // Verificar el tipo de mensaje recibido
-                    if (inputLine.startsWith("getRoles,")) {
-                        handleGetRolesRequest(inputLine, out);
-                    } else {
-                        handleAuthenticationOrRegistrationRequest(inputLine, out);
+ private void handleRequest(String request, PrintWriter writer, OutputStream output) {
+    String[] requestParts = request.split(",");
+    String command = requestParts[0];
+    String fileType = requestParts.length > 1 ? requestParts[1] : "";
+
+    String directoryPath = CONTENT_DIR + File.separator + fileType;
+
+    switch (command) {
+        case "LOAD":
+            File dir = new File(directoryPath);
+            if (dir.exists() && dir.isDirectory()) {
+                String[] files = dir.list();
+                if (files != null) {
+                    for (String file : files) {
+                        writer.println(file);
+                    }
+                }
+                writer.println(""); // End of list indicator
+            } else {
+                writer.println("DIRECTORY NOT FOUND");
+            }
+            break;
+            case "UPLOAD":
+            if (requestParts.length > 2) {
+                String fileName = requestParts[2];
+                File file = new File(directoryPath, fileName);
+                try (FileOutputStream fos = new FileOutputStream(file)) {
+                    writer.println("200 OK");
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = clientSocket.getInputStream().read(buffer)) != -1) {
+                        fos.write(buffer, 0, bytesRead);
+                    }
+                    fos.flush();
+                    System.out.println("Archivo recibido y guardado: " + file.getAbsolutePath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    writer.println("500 ERROR");
+                }
+            }
+            break;
+        case "DOWNLOAD":    
+            if (requestParts.length > 2) {
+                String fileName = requestParts[2];
+                File file = new File(directoryPath, fileName);
+                if (file.exists() && !file.isDirectory()) {
+                    writer.println("200 OK");
+                    writer.println(file.length()); // Enviar el tamaño del archivo
+                    try (FileInputStream fis = new FileInputStream(file)) {
+                        byte[] buffer = new byte[1024];
+                        int bytesRead;
+                        while ((bytesRead = fis.read(buffer)) != -1) {
+                            output.write(buffer, 0, bytesRead);
+                        }
+                        output.flush();
+                        writer.println(""); // Indicador de fin de transmisión
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    writer.println("404 Not Found");
+                }
+            }
+            break;
+       case "REGISTER":
+            if (requestParts.length > 3) {
+                String username = requestParts[1];
+                String password = requestParts[2];
+                String services = String.join(",", Arrays.copyOfRange(requestParts, 3, requestParts.length));
+                System.out.println("Roles recibidos: " + services);  // Verificación de roles recibidos
+                boolean registered = registerUser(username, password, services);
+                writer.println("auth exitoso " + registered);
+            }
+            break;
+        case "LOGIN":
+            if (requestParts.length > 2) {
+                String username = requestParts[1];
+                String password = requestParts[2];
+                boolean authenticated = authenticateUser(username, password);
+                writer.println("auth exitoso " + authenticated);
+            }
+            break;
+        default:
+            writer.println("UNKNOWN COMMAND");
+            break;
+    }
+}
+
+private boolean registerUser(String username, String password, String services) {
+    String hashedPassword = PasswordUtils.hashPassword(password);
+    String userRecord = username + "," + hashedPassword + "," + services;
+    System.out.println("Registro de usuario: " + userRecord);  // Verificación de registro de usuario
+
+    try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("Users.txt", true)))) {
+        out.println(userRecord);
+        return true;
+    } catch (IOException e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
+        private boolean authenticateUser(String username, String password) {
+            String rutaArchivo = "Users.txt";
+            try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
+                String linea;
+                while ((linea = br.readLine()) != null) {
+                    String[] partes = linea.split(",");
+                    if (partes.length > 2 && partes[0].equals(username)) {
+                        String storedPassword = partes[1];
+                        return PasswordUtils.verifyPassword(password, storedPassword);
                     }
                 }
             } catch (IOException e) {
-                System.err.println("Error al manejar la conexión con el cliente: " + e.getMessage());
-            } finally {
-                try {
-                    // Cerrar el socket del cliente
-                    clientSocket.close();
-                } catch (IOException e) {
-                    System.err.println("Error al cerrar el socket del cliente: " + e.getMessage());
-                }
+                e.printStackTrace();
             }
-        }
-
-        private void handleGetRolesRequest(String inputLine, PrintWriter out) {
-            String[] parts = inputLine.split(",");
-            if (parts.length != 2) {
-                System.err.println("Formato de mensaje inválido: " + inputLine);
-                out.println("error,Formato de mensaje inválido");
-                return;
-            }
-
-            String username = parts[1];
-            List<String> userRoles = fileUserAuthentication.getUserRoles(username);
-            out.println(String.join(",", userRoles));
-        }
-
-        private void handleAuthenticationOrRegistrationRequest(String inputLine, PrintWriter out) {
-            String[] parts = inputLine.split(",");
-            if (parts.length < 3) {
-                System.err.println("Formato de mensaje inválido: " + inputLine);
-                out.println("error,Formato de mensaje inválido");
-                return;
-            }
-
-            int operationCode;
-            try {
-                operationCode = Integer.parseInt(parts[0]);
-            } catch (NumberFormatException e) {
-                System.err.println("Código de operación no válido: " + parts[0]);
-                out.println("error,Código de operación no válido");
-                return;
-            }
-
-            String username = parts[1];
-            String password = parts[2];
-
-            switch (operationCode) {
-                case 0:
-                    // Autenticación del usuario
-                    boolean isAuthenticated = fileUserAuthentication.authenticateUser(username, password);
-                    if (isAuthenticated) {
-                        out.println("auth exitoso true"); // Enviar el resultado de la autenticación al cliente
-                    } else {
-                        out.println("auth exitoso false"); // Enviar un mensaje indicando que la autenticación falló
-                        // Cerrar el socket y finalizar el hilo
-                        try {
-                            clientSocket.close();
-                        } catch (IOException e) {
-                            System.err.println("Error al cerrar el socket del cliente: " + e.getMessage());
-                        }
-                        return; // Salir del método run() para terminar el hilo
-                    }
-                    break;
-                case 1:
-                    // Registro de nuevo usuario
-                    List<String> roles = new ArrayList<>();
-                    if (parts.length > 3) {
-                        roles = Arrays.asList(parts).subList(3, parts.length);
-                    }
-                    fileUserAuthentication.registerUser(username, password, roles);
-                    out.println("auth exitoso true"); // Enviar un mensaje al cliente indicando que el registro fue exitoso
-                    break;
-                default:
-                    System.err.println("Código de operación no válido");
-                    out.println("error,Código de operación no válido");
-                    break;
-            }
+            return false;
         }
     }
-} 
+}

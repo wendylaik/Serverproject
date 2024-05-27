@@ -2,7 +2,6 @@ package Interfaz;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -14,6 +13,8 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import server.Flujocliente;
 
+
+
 /**
  *
  * @author Jordy vindas
@@ -23,7 +24,7 @@ public class Register extends javax.swing.JPanel {
     public static Socket sharedSocket;
     public static boolean sharedAuth;
     private static final String SERVER_ADDRESS = "25.65.94.55"; // Cambia esto con la dirección IP de tu servidor
-    private static final int SERVER_PORT = 8080;
+    private static final int SERVER_PORT = 12345;
 
     public Register() {
 
@@ -231,86 +232,66 @@ public class Register extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnRegistroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegistroActionPerformed
-        String username = Username.getText(); // Obtiene el nombre de usuario del campo de texto    
-        char[] passChars = Password.getPassword();
-        String password = new String(passChars);
-        char[] confirmP = confirmPass.getPassword();
-        String confirm = new String(confirmP);
+                                                  
+    String username = Username.getText();
+    char[] passChars = Password.getPassword();
+    String password = new String(passChars);
+    char[] confirmP = confirmPass.getPassword();
+    String confirm = new String(confirmP);
 
-        if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Por favor ingrese un nombre de usuario y una contraseña");
-        } else if (verificarUsuarioExistente(username)) {
-            JOptionPane.showMessageDialog(this, "El nombre de usuario ya está en uso. Por favor elige otro.");
-        } else if (!password.equals(confirm)) {
-            JOptionPane.showMessageDialog(this, "La contraseña no coincide");
-        } else {
-            // Obtener los roles seleccionados
-            StringBuilder roles = new StringBuilder();
-            if (documentRole.isSelected()) {
-                roles.append("Documents,");
-            }
-            if (videoRole.isSelected()) {
-                roles.append("Videos,");
-            }
-            if (musicRole.isSelected()) {
-                roles.append("Music,");
-            }
-
-            if (roles.length() > 0) {
-                roles.setLength(roles.length() - 1);  // Eliminar la última coma
-            } else {
-                JOptionPane.showMessageDialog(this, "Por favor seleccione al menos un rol");
-                return;
-            }
-
-            String role = roles.toString();
-
-            Socket socket = null;
-            Flujocliente clientCommunication = null;
-            try {
-                socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-                // Crear instancia de ClientCommunication para manejar la comunicación con el servidor
-                clientCommunication = new Flujocliente(socket, in, out);
-
-                // Envía el nombre de usuario, la contraseña, los roles y el indicador de autenticación compartida al servidor
-                clientCommunication.sendMessage("1," + username + "," + password + "-" + Logiin.sharedAuth + "," + role);
-
-                // Recibir respuesta del servidor
-                String response = clientCommunication.receiveMessage();
-
-                // Si la autenticación fue exitosa, procede a abrir la ventana del cliente
-                if (response.startsWith("auth exitoso")) {
-                    boolean isAuthenticated = Boolean.parseBoolean(response.substring(13));
-                    if (isAuthenticated) {
-                        Logiin.sharedSocket = socket;
-                        Logiin.sharedAuth = true;
-                 //       guardarUsuario(username, password);  // Guarda credenciales de usuario
-                        abrirVentanaCliente(username, role, clientCommunication);
-                    }
-                }
-            } catch (IOException e) {
-                System.err.println("Error al conectar con el servidor: " + e.getMessage());
-                JOptionPane.showMessageDialog(this, "Error al conectar con el servidor");
-                try {
-                    if (clientCommunication != null) {
-                        clientCommunication.close();
-                    }
-                    if (socket != null) {
-                        socket.close();
-                    }
-                } catch (IOException ex) {
-                    System.err.println("Error al cerrar el socket: " + ex.getMessage());
-                }
-            } finally {
-                Username.setText("");
-                Password.setText("");
-                confirmPass.setText("");
-
-            }
+    if (username.isEmpty() || password.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Por favor ingrese un nombre de usuario y una contraseña");
+    } else if (verificarUsuarioExistente(username)) {
+        JOptionPane.showMessageDialog(this, "El nombre de usuario ya está en uso. Por favor elige otro.");
+    } else if (!password.equals(confirm)) {
+        JOptionPane.showMessageDialog(this, "La contraseña no coincide");
+    } else {
+        StringBuilder roles = new StringBuilder();
+        if (documentRole.isSelected()) {
+            roles.append("Documents,");
         }
+        if (videoRole.isSelected()) {
+            roles.append("Videos,");
+        }
+        if (musicRole.isSelected()) {
+            roles.append("Music,");
+        }
+
+        if (roles.length() > 0) {
+            roles.setLength(roles.length() - 1);  // Eliminar la última coma
+        } else {
+            JOptionPane.showMessageDialog(this, "Por favor seleccione al menos un rol");
+            return;
+        }
+
+        String role = roles.toString();
+        System.out.println("Roles seleccionados: " + role);  // Verificación de roles seleccionados
+
+        try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+            Flujocliente clientCommunication = new Flujocliente(socket, in, out);
+            clientCommunication.sendMessage("REGISTER," + username + "," + password + "," + role);
+
+            String response = clientCommunication.receiveMessage();
+            System.out.println("Response from server: " + response);
+
+            if (response.startsWith("auth exitoso true")) {
+                JOptionPane.showMessageDialog(this, "Registro exitoso");
+                JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
+                frame.dispose();  // Cierra la ventana actual
+                Logiin loginPanel = new Logiin();
+                loginPanel.setVisible(true);  // Abre la ventana de login
+            } else {
+                JOptionPane.showMessageDialog(this, "Error en el registro");
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error al conectar con el servidor: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Error al conectar con el servidor");
+        }
+    }
 
     }//GEN-LAST:event_btnRegistroActionPerformed
 
