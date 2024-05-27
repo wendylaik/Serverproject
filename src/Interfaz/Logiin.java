@@ -15,7 +15,7 @@ public class Logiin extends javax.swing.JFrame {
 
     public static Socket sharedSocket;
     public static boolean sharedAuth;
-    private static final String SERVER_ADDRESS = "192.168.100.7"; // Cambia esto con la dirección IP de tu servidor
+    private static final String SERVER_ADDRESS = "25.65.94.55"; // Cambia esto con la dirección IP de tu servidor
     private static final int SERVER_PORT = 8080; // Cambia esto con el puerto en el que tu servidor está escuchando
 
     public Logiin() {
@@ -285,16 +285,15 @@ public class Logiin extends javax.swing.JFrame {
     String username = UserName.getText();
     char[] passChars = txtPassword.getPassword();
     String password = new String(passChars);
-    
-    traerRoles(username);
 
     try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
          PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
          BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
         Flujocliente clientCommunication = new Flujocliente(socket, in, out);
-        // envia mensajes al servidor para autenticacion
-        clientCommunication.sendMessage("0," + username + "," + password + "-" + Logiin.sharedAuth + "," + traerRoles(username));
+
+        // Enviar mensaje de autenticación al servidor
+        clientCommunication.sendMessage("0," + username + "," + password);
 
         String response = clientCommunication.receiveMessage();
 
@@ -302,12 +301,10 @@ public class Logiin extends javax.swing.JFrame {
             // Solicitar roles al servidor
             clientCommunication.sendMessage("getRoles," + username);
             String rolesResponse = clientCommunication.receiveMessage();
-            System.out.println("Roles Response: " + rolesResponse); // Depuración
-            
+            List<String> roles = Arrays.asList(rolesResponse.split(","));
             Logiin.sharedSocket = socket;
             Logiin.sharedAuth = true;
-            Client client = new Client(username, clientCommunication, traerRoles(username));
-            client.setVisible(true);
+            abrirVentanaCliente(username, roles, clientCommunication);
             this.dispose();
         } else {
             JOptionPane.showMessageDialog(this, "Error: Usuario o contraseña incorrectos");

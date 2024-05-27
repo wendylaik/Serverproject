@@ -18,28 +18,32 @@ public class Server {
     private static final int PORT = 8080;
     private static final int MAX_THREADS = 8;
     private static final ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
-    private static final Verfication fileUserAuthentication = new Verfication(); // Objeto para
+    private static final Verfication fileUserAuthentication = new Verfication(); // Objeto para la autenticación
 
     public static void main(String[] args) {
+        try {
+            String IP = "25.65.94.55"; // Asegúrate de usar tu IP de Hamachi
+            InetAddress hamachiAddress = InetAddress.getByName(IP);
 
-        try (ServerSocket serverSocket = new ServerSocket(PORT, 0, InetAddress.getLocalHost())) {
-            // Crear un ServerSocket y mostrar mensajes informativos
-            System.out.println("Servidor escuchando en localhost en el puerto " + PORT);
-            System.out.println("Dirección IP del servidor: " + InetAddress.getLocalHost().getHostAddress());
+            try (ServerSocket serverSocket = new ServerSocket(PORT, 0, hamachiAddress)) {
+                // Mostrar mensajes informativos
+                System.out.println("Servidor escuchando en " + IP + " en el puerto " + PORT);
 
-            while (true) {
-                // Esperar y aceptar conexiones entrantes de clientes
-                Socket clientSocket = serverSocket.accept();
-                System.out.println("Cliente conectado desde " + clientSocket.getInetAddress());
+                while (true) {
+                    // Esperar y aceptar conexiones entrantes de clientes
+                    Socket clientSocket = serverSocket.accept();
+                    System.out.println("Cliente conectado desde " + clientSocket.getInetAddress());
 
-                // Crear un nuevo hilo (ClientHandler) para manejar las solicitudes del cliente
-                Runnable clientHandler = new ClientHandler(clientSocket, fileUserAuthentication);
-                executor.execute(clientHandler); // Ejecutar el hilo en el ExecutorService
+                    // Crear un nuevo hilo (ClientHandler) para manejar las solicitudes del cliente
+                    Runnable clientHandler = new ClientHandler(clientSocket, fileUserAuthentication);
+                    executor.execute(clientHandler); // Ejecutar el hilo en el ExecutorService
+                }
+            } catch (IOException e) {
+                System.err.println("Error en el servidor: " + e.getMessage());
             }
         } catch (IOException e) {
-            System.err.println("Error en el servidor: " + e.getMessage());
+            System.err.println("Error al obtener la dirección de Hamachi: " + e.getMessage());
         }
-
     }
 
     // Clase interna para manejar las solicitudes de un cliente específico
@@ -55,25 +59,19 @@ public class Server {
 
         @Override
         public void run() {
-            try (
-                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true); BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));) {
-                String inputLine;
+            try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
 
+                String inputLine;
                 while ((inputLine = in.readLine()) != null) {
                     System.out.println("Mensaje del cliente: " + inputLine);
-                    String[] AuthParts = inputLine.split("-");
-                    System.out.println(AuthParts);
-                    if (!Boolean.parseBoolean(AuthParts[1])) {
-                        handleAuthenticationRequest(inputLine, out);
-                        continue;
 
-                    } // Manejar solicitudes de autenticación
-                    else {
-
-                        // Saltar al siguiente ciclo de bucle después de manejar la autenticación
+                    // Verificar el tipo de mensaje recibido
+                    if (inputLine.startsWith("getRoles,")) {
+                        handleGetRolesRequest(inputLine, out);
+                    } else {
+                        handleAuthenticationOrRegistrationRequest(inputLine, out);
                     }
-
-                    // Si el usuario está autenticado, manejar otras solicitudes
                 }
             } catch (IOException e) {
                 System.err.println("Error al manejar la conexión con el cliente: " + e.getMessage());
@@ -87,26 +85,53 @@ public class Server {
             }
         }
 
-        private void handleAuthenticationRequest(String inputLine, PrintWriter out) throws IOException {
-            // Verificar si la solicitud comienza con "Login_"
-            // Separar los datos recibidos por el cliente (código de operación, nombre de usuario y contraseña)
+        private void handleGetRolesRequest(String inputLine, PrintWriter out) {
             String[] parts = inputLine.split(",");
-            int operationCode = Integer.parseInt(parts[0]);
+            if (parts.length != 2) {
+                System.err.println("Formato de mensaje inválido: " + inputLine);
+                out.println("error,Formato de mensaje inválido");
+                return;
+            }
+
+            String username = parts[1];
+            List<String> userRoles = fileUserAuthentication.getUserRoles(username);
+            out.println(String.join(",", userRoles));
+        }
+
+        private void handleAuthenticationOrRegistrationRequest(String inputLine, PrintWriter out) {
+            String[] parts = inputLine.split(",");
+            if (parts.length < 3) {
+                System.err.println("Formato de mensaje inválido: " + inputLine);
+                out.println("error,Formato de mensaje inválido");
+                return;
+            }
+
+            int operationCode;
+            try {
+                operationCode = Integer.parseInt(parts[0]);
+            } catch (NumberFormatException e) {
+                System.err.println("Código de operación no válido: " + parts[0]);
+                out.println("error,Código de operación no válido");
+                return;
+            }
+
             String username = parts[1];
             String password = parts[2];
 
-            // Realizar la autenticación o el registro según el código de operación recibido
             switch (operationCode) {
                 case 0:
                     // Autenticación del usuario
                     boolean isAuthenticated = fileUserAuthentication.authenticateUser(username, password);
                     if (isAuthenticated) {
                         out.println("auth exitoso true"); // Enviar el resultado de la autenticación al cliente
-                        isAuthenticated = true; // Marcar al usuario como autenticado
                     } else {
                         out.println("auth exitoso false"); // Enviar un mensaje indicando que la autenticación falló
                         // Cerrar el socket y finalizar el hilo
-                        clientSocket.close();
+                        try {
+                            clientSocket.close();
+                        } catch (IOException e) {
+                            System.err.println("Error al cerrar el socket del cliente: " + e.getMessage());
+                        }
                         return; // Salir del método run() para terminar el hilo
                     }
                     break;
@@ -119,17 +144,11 @@ public class Server {
                     fileUserAuthentication.registerUser(username, password, roles);
                     out.println("auth exitoso true"); // Enviar un mensaje al cliente indicando que el registro fue exitoso
                     break;
-                case 2:
-                    // Obtener roles del usuario
-                    List<String> userRoles = fileUserAuthentication.getUserRoles(username);
-                    out.println(String.join(",", userRoles));
-                    break;
                 default:
                     System.err.println("Código de operación no válido");
+                    out.println("error,Código de operación no válido");
                     break;
             }
-
         }
-
     }
-}
+} 
