@@ -223,8 +223,9 @@ public class Logiin extends javax.swing.JFrame {
         System.err.println("Error al conectar con el servidor: " + e.getMessage());
         JOptionPane.showMessageDialog(this, "Error al conectar con el servidor");
     }
+}
 
-    }
+    
 
     private void abrirVentanaCliente(String username, List<String> roles, Flujocliente clientCommunication) {
         Client client = new Client(username, clientCommunication, roles);

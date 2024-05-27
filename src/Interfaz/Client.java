@@ -1,6 +1,6 @@
 package Interfaz;
 
-import java.awt.Desktop;
+import java.awt.Desktop;    
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
