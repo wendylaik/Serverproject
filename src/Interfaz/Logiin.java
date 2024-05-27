@@ -5,6 +5,7 @@ import java.io.*;
 import javax.swing.JOptionPane;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import server.Flujocliente;
@@ -207,9 +208,11 @@ public class Logiin extends javax.swing.JFrame {
         String response = clientCommunication.receiveMessage();
         System.out.println("Respuesta recibida del servidor: " + response);
         if (response != null && response.startsWith("auth exitoso true")) {
+            String rolesString = response.substring("auth exitoso true ".length());
+            List<String> roles = Arrays.asList(rolesString.split(","));
             Logiin.sharedSocket = socket;
             Logiin.sharedAuth = true;
-            Client client = new Client(username, clientCommunication, traerRoles(username));
+            Client client = new Client(username, clientCommunication, roles);
             client.setVisible(true);
             this.dispose();
         } else {
@@ -217,9 +220,10 @@ public class Logiin extends javax.swing.JFrame {
         }
 
     } catch (IOException e) {
-        e.printStackTrace();
-        JOptionPane.showMessageDialog(this, "Error al conectar con el servidor: " + e.getMessage());
+        System.err.println("Error al conectar con el servidor: " + e.getMessage());
+        JOptionPane.showMessageDialog(this, "Error al conectar con el servidor");
     }
+
     }
 
     private void abrirVentanaCliente(String username, List<String> roles, Flujocliente clientCommunication) {

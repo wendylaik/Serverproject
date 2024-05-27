@@ -5,7 +5,7 @@ import java.net.ServerSocket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Arrays;
-import java.util.Base64;
+
 
 public class Server {
 
@@ -137,13 +137,41 @@ public class Server {
                 String username = requestParts[1];
                 String password = requestParts[2];
                 boolean authenticated = authenticateUser(username, password);
-                writer.println("auth exitoso " + authenticated);
+                if (authenticated) {
+                    String roles = getUserRoles(username);
+                    writer.println("auth exitoso true " + roles);
+                } else {
+                    writer.println("auth exitoso false");
+                }
             }
             break;
         default:
             writer.println("UNKNOWN COMMAND");
             break;
     }
+}
+
+private String getUserRoles(String username) {
+    String rutaArchivo = "Users.txt";
+    StringBuilder roles = new StringBuilder();
+    try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
+        String linea;
+        while ((linea = br.readLine()) != null) {
+            String[] partes = linea.split(",");
+            if (partes.length > 2 && partes[0].equals(username)) {
+                for (int i = 2; i < partes.length; i++) {
+                    roles.append(partes[i].trim()).append(",");
+                }
+                if (roles.length() > 0) {
+                    roles.setLength(roles.length() - 1); // Eliminar la última coma
+                }
+                break;
+            }
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+    return roles.toString();
 }
 
 private boolean registerUser(String username, String password, String services) {
