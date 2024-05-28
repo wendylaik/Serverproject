@@ -1,5 +1,7 @@
 package Interfaz;
 
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -23,13 +25,21 @@ public class Register extends javax.swing.JPanel {
 
     public static Socket sharedSocket;
     public static boolean sharedAuth;
-    private static final String SERVER_ADDRESS = "192.168.100.7"; // Cambia esto con la dirección IP de tu servidor
+    private static final String SERVER_ADDRESS = "25.65.94.55"; // Cambia esto con la dirección IP de tu servidor
     private static final int SERVER_PORT = 12345;
 
     public Register() {
 
         initComponents();
+        centerWindow();
     }
+    
+     private void centerWindow() {
+    Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+    int x = (int) ((dimension.getWidth() - this.getWidth()) / 2);
+    int y = (int) ((dimension.getHeight() - this.getHeight()) / 2);
+    this.setLocation(x, y);
+}
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents

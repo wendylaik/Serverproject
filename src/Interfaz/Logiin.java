@@ -1,5 +1,7 @@
 package Interfaz;
 
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.util.List;
 import java.io.*;
 import javax.swing.JOptionPane;
@@ -14,12 +16,21 @@ public class Logiin extends javax.swing.JFrame {
 
     public static Socket sharedSocket;
     public static boolean sharedAuth;
-    static final String SERVER_ADDRESS = "192.168.100.7"; // Cambia esto con la dirección IP de tu servidor
+    static final String SERVER_ADDRESS = "25.65.94.55"; // Cambia esto con la dirección IP de tu servidor
     static final int SERVER_PORT = 12345; // Cambia esto con el puerto en el que tu servidor está escuchando
 
     public Logiin() {
         initComponents();
+        centerWindow();
     }
+    
+    private void centerWindow() {
+    Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+    int x = (int) ((dimension.getWidth() - this.getWidth()) / 2);
+    int y = (int) ((dimension.getHeight() - this.getHeight()) / 2);
+    this.setLocation(x, y);
+}
+
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated
